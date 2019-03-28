@@ -15,6 +15,7 @@ Simple (and for now, sequential) PyTorch model parser. Allowes to define a model
 - [Supported modules](#supported-modules)
 - [Detailed Usage](#detailed-usage)
 
+
 ### Installation
 
 **HTTPS**
@@ -25,7 +26,16 @@ pip install git+https://github.com/ksanjeevan/torchparse.git
 ```bash
 pip install git+ssh://git@github.com/ksanjeevan/torchparse.git
 ```
+Verify:
+```python
+>> from torchparse import parse_cfg, get_sample_cfg
+>> parse_cfg(get_sample_cfg(), shape=(3,100,100))
 
+ModuleDict(
+  (convs): Sequential(
+    (conv2d_0): Conv2d(3, 32, kernel_size=(3, 3), stride=(1, 1))
+...
+```
 
 ### Simple Usage
 
@@ -84,8 +94,6 @@ ModuleDict(
 ```
 
 
-
-
 ### Supported modules
 
 Implemented layers (`nn.Module`):
@@ -104,15 +112,16 @@ Implemented layers (`nn.Module`):
 - [ ] `ConvTranspose2d`, `ConvTranspose1d`
 
 
-### Detailed Usage
 
+
+### Detailed Usage
 
 #### *[moddims]*: account for Tensor manipulations
 
 Allows to incorporate in the cfg file any tranpose or reshape that will occur in the `forward` call, since this will affect the  intermmediate shapes.
 
+
 ##### permute
----
 
 For example if in `forward()`:
 ```
@@ -148,8 +157,9 @@ then in `.cfg` add:
 ```
 (since `torchparse` doesn't consider batch. Doesn't care if we choose the last input of the RNN, only that the time dimension is not there anymore, only `(batch, feature)`, i.e. keep dimension `1`).
 
-##### collapse
 ---
+##### collapse
+
 
 For example if in `forward()`:
 ```
@@ -169,31 +179,13 @@ then in `.cfg` add:
 ...
 ```
 
-##### drop
 ---
-
-For example if in `forward()`:
-```
-...
-# (batch, time, feature) -> (batch, feature)
-x = x[:,-1]
-...
-```
-
-then in `.cfg` add:
-
-```
-...
-[moddims]
-	drop=[0]
-...
-```
 
 
 #### *[_module]*: sub-module sequential blocks
 Even for a sequential model there might be transformations applied in the `forward` call that aren't defined in the `nn.Module` (e.g.: example above where the `conv_module` will be seperatley defined from the `recur_module` since the `foraward` call will deal with the reshapes, packing sequences, etc.). 
 
-For now only allow shallow submodules (i.e. every config can have any number of sequential submodules).
+For now only allow shallow submodules (i.e. every `.cfg` can have any number of named sequential submodules).
 
 `torchparse.parse_cfg` will return an `nn.ModuleDict`. If no submodules are explicitly defined, the `nn.ModuleDict` will only have one key (`main`) mapping to the defined `nn.Sequential`.
 
