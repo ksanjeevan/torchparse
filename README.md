@@ -111,7 +111,7 @@ Implemented layers (`nn.Module`):
 
 Allows to incorporate in the cfg file any tranpose or reshape that will occur in the `forward` call, since this will affect the  intermmediate shapes.
 
-##### transpose
+##### permute
 ---
 
 For example if in `forward()`:
@@ -127,10 +127,26 @@ then in `.cfg` add:
 ```
 ...
 [moddims]
-	transpose=[2,0,1]
+	permute=[2,0,1]
+...
+```
+This can also be used when dropping a dimension. e.g. in a many-to-one RNN might do something like:
+```
+...
+# (batch, time, feature) -> (batch, feature)
+x = x[:,-1]
 ...
 ```
 
+then in `.cfg` add:
+
+```
+...
+[moddims]
+	permute=[1]
+...
+```
+(since `torchparse` doesn't consider batch. Doesn't care if we choose the last input of the RNN, only that the time dimension is not there anymore, only `(batch, feature)`, i.e. keep dimension `1`).
 
 ##### collapse
 ---
@@ -177,6 +193,8 @@ then in `.cfg` add:
 #### *[_module]*: sub-module sequential blocks
 Even for a sequential model there might be transformations applied in the `forward` call that aren't defined in the `nn.Module` (e.g.: example above where the `conv_module` will be seperatley defined from the `recur_module` since the `foraward` call will deal with the reshapes, packing sequences, etc.). 
 
+For now only allow shallow submodules (i.e. every config can have any number of sequential submodules).
+
 `torchparse.parse_cfg` will return an `nn.ModuleDict`. If no submodules are explicitly defined, the `nn.ModuleDict` will only have one key (`main`) mapping to the defined `nn.Sequential`.
 
 #### *REPEATx*: for repeating blocks of layers
@@ -206,3 +224,4 @@ END
 - [x] Non _module cfg handling
 - [x] Block repetitions
 - [ ] Skip connections
+- [ ] Allow .cfg to include input shape

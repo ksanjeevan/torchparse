@@ -70,32 +70,33 @@ class ModDims(Layer):
     """
     Handle shape changes due to tensor manipulation.
 
-    transpose -> transpose/permute dims
-        e.g.: transpose = [2,0] -> tensor([3,20,30]) becomes tensor([30,20,3])
+    permute -> permute dims
+        e.g.: permute = [2,1,0]: tensor([3,20,30]) -> tensor([30,20,3])
+              permute = [0,2]:   tensor([3,20,30]) -> tensor([3,30])
     collapse -> combine two dimensions into one
         e.g.: collapse = [1,2] -> tensor([3,20,30]) becomes tensor([3,600]) 
-    drop -> drop dims
-        e.g.: drop = [0] for many-to-one RNN -> tensor([20,30]) becomes tensor([30]) 
 
     Operations are applied in order: 
-            Transpose -> Collapse -> Drop
+            Permute -> Collapse
     although if different order is needed it can be defined in the cfg file e.g.:
         [moddims]
-            collapse=[1,2]
+            collapse=[1,2] # (200, 300, 3) -> (200, 900)
         [moddims]
-            transpose=[0,2]
+            permute=[1,0] # (200, 900) -> (900, 200)
     """
 
     def __init__(self, config, in_shape):
         super(ModDims, self).__init__(config, in_shape)
 
     def _perm_dims(self, out_shape):
-        if 'transpose' in self.config:
-            out_shape = out_shape[self.config['transpose']]
+        if 'permute' in self.config:
+            assert len(self.config['permute']) <= out_shape.size(0)
+            out_shape = out_shape[self.config['permute']]
         return out_shape
 
     def _coll_dims(self, out_shape):
         if 'collapse' in self.config:
+            assert len(self.config['collapse']) <= out_shape.size(0)
             coll_idx = self.config['collapse']
             disap_idx = coll_idx[1:]
             final_idx = [i for i in range(out_shape.size(0)) if i not in disap_idx]
@@ -103,18 +104,11 @@ class ModDims(Layer):
             out_shape = out_shape[final_idx]
         return out_shape 
 
-    def _drop_dims(self, out_shape):
-        if 'drop' in self.config:
-            disap_idx = self.config['drop']
-            final_idx = [i for i in range(out_shape.size(0)) if i not in disap_idx]
-            out_shape = out_shape[final_idx]
-        return out_shape 
 
     def get_out_shape(self):
         out_shape = self.in_shape.clone()
         out_shape = self._perm_dims(out_shape)
         out_shape = self._coll_dims(out_shape)
-        out_shape = self._drop_dims(out_shape)
         return out_shape
 
     def get_module(self):

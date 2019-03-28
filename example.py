@@ -27,7 +27,7 @@ cfg = """
         END
         
     [moddims]
-        transpose=[2,0,1]
+        permute=[2,0,1]
         collapse=[1,2]
 
     [recur_module]
@@ -36,7 +36,7 @@ cfg = """
             num_layers = 2
 
     [moddims]
-        drop=[0]
+        permute=[1]
 
     [dense_module]
         [batchnorm1d]
