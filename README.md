@@ -37,6 +37,7 @@ ModuleDict(
 ...
 ```
 
+
 ### Simple Usage
 
 Define model in a `.cfg` file (or string), e.g.:
