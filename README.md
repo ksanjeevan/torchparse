@@ -17,10 +17,14 @@ Simple (and for now, sequential) PyTorch model parser. Allowes to define a model
 
 ### Installation
 
+**HTTPS**
 ```bash
 pip install git+https://github.com/ksanjeevan/torchparse.git
 ```
-
+**SSH**
+```bash
+pip install git+ssh://git@github.com/ksanjeevan/torchparse.git
+```
 
 
 ### Simple Usage
@@ -52,7 +56,7 @@ Define model in a `.cfg` file (or string), e.g.:
     [linear]
         out_features = 10
 ```
-Then, calling **`parse_cfg(cfg_fname, shape=[3,200,300])`** returns:
+Then, calling **`parse_cfg('example.cfg', shape=[3,200,300])`** returns:
 
 ```python
 ModuleDict(
@@ -170,7 +174,7 @@ then in `.cfg` add:
 ```
 
 
-#### *[_module]*: sub-module Sequential blocks
+#### *[_module]*: sub-module sequential blocks
 Even for a sequential model there might be transformations applied in the `forward` call that aren't defined in the `nn.Module` (e.g.: example above where the `conv_module` will be seperatley defined from the `recur_module` since the `foraward` call will deal with the reshapes, packing sequences, etc.). 
 
 `torchparse.parse_cfg` will return an `nn.ModuleDict`. If no submodules are explicitly defined, the `nn.ModuleDict` will only have one key (`main`) mapping to the defined `nn.Sequential`.

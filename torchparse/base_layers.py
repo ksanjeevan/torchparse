@@ -4,6 +4,10 @@ import torch.nn as nn
 from .utils import *
 
 class Layer(object):
+    """
+    Base class for any layer. Safely convert its parameters and 
+    keep track of its input shape.
+    """
 
     def __init__(self, config, in_shape):
         self.config = {k:safe_conversion(v) for k,v in config.items()}
@@ -17,6 +21,10 @@ class Layer(object):
 
 
 class ConvolveSpatial(Layer):
+    """
+    Base class for any layer that uses some sort of 2d convolution
+    (conv2d, maxpool2d for now, maybe refactor this) 
+    """
 
     def __init__(self, config, in_shape):
 
@@ -39,6 +47,10 @@ class ConvolveSpatial(Layer):
         raise NotImplementedError
 
 class Dense(Layer):
+    """
+    Base class for any layer that uses dense transformations
+    (i.e. matrix mult), linear and rnn.
+    """
     def __init__(self, config, in_shape):
 
         super(Dense, self).__init__(config, in_shape)

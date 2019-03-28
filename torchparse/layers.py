@@ -5,6 +5,10 @@ from .base_layers import *
 
 
 class Unperturbed(Layer):
+    """
+    Handles layers with no effect where input_shape==output_shape.
+    Thin wrapper around Layer.
+    """
     layer = {
             'relu' : nn.ReLU,
             'elu' : nn.ELU,
@@ -26,6 +30,10 @@ class Unperturbed(Layer):
 
 
 class BatchNorm(Layer):
+    """
+    Handle shape transformation and correct 
+    class instantiation for BatchNorm layers.
+    """
     layer = {
             'batchnorm1d':nn.BatchNorm1d,
             'batchnorm2d':nn.BatchNorm2d
@@ -114,6 +122,10 @@ class ModDims(Layer):
 
 
 class Linear(Dense):
+    """
+    Handle shape transformation and correct 
+    class instantiation for nn.Linear.
+    """
     def __init__(self, config, in_shape):
         super(Linear, self).__init__(config, in_shape)
         self.changed_feat = 'out_features'
@@ -124,6 +136,10 @@ class Linear(Dense):
 
 
 class Recurrent(Dense):
+    """
+    Handle shape transformation and correct 
+    class instantiation for Recurrent layers.
+    """
     layer = {
                 'lstm' : nn.LSTM,
                 'gru' : nn.GRU,
@@ -144,7 +160,11 @@ class Recurrent(Dense):
 
 
 class Conv2d(ConvolveSpatial):
-
+    """
+    Handle shape transformation and correct 
+    class instantiation for nn.Conv2d
+    (should this be general for conv1d,3d?)
+    """
     def __init__(self, config, in_shape):
         super(Conv2d, self).__init__(config, in_shape)
         self.config['in_channels'] = self.in_shape[0].item()
@@ -156,7 +176,11 @@ class Conv2d(ConvolveSpatial):
         return nn.Conv2d(**self.config)
 
 class MaxPool2d(ConvolveSpatial):
-
+    """
+    Handle shape transformation and correct 
+    class instantiation for nn.MaxPool2d
+    (should this be general for adaptive, avgpool, 1d,3d?)
+    """
     def __init__(self, config, in_shape):
         super(MaxPool2d, self).__init__(config, in_shape)
     

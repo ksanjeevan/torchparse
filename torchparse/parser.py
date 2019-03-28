@@ -7,9 +7,14 @@ from .utils import add_counters, format_repeats, defined_submodule
 from . import layers
 
 def get_implem_layers():
-
+    """
+    Get all the layer types. If the layer type is responsible for > 1 nn.Module then
+    add an entry with for each appropiate name in the dictionary.
+    e.g.: {'lstm':torchparse.layers.Recurrent, 'gru':torchparse.layers.Recurrent} 
+    """
     ret = {}
-    names = [m[0] for m in inspect.getmembers(layers, inspect.isclass) if m[1].__module__ == layers.__name__]
+    names = [m[0] for m in inspect.getmembers(layers, inspect.isclass) \
+            if m[1].__module__ == layers.__name__]
     for n in names:
         l = getattr(layers, n)
         if hasattr(l, 'layer'):
@@ -20,17 +25,23 @@ def get_implem_layers():
     return ret
 
 class CFGParser(object):
+    """
+    Handles parsing .cfg and returning the defined model as an nn.ModuleDict.
+    """
 
     def __init__(self, cfg_fname):
         self.layers = get_implem_layers()
 
         self.config = configparser.ConfigParser(strict=False,
-            allow_no_value=True)
+                                                allow_no_value=True)
 
         self.config.read_string(self._preparse(cfg_fname))
     
 
     def _preparse(self, cfg_fname):
+        """
+        Format/preprocess cfg before starting to create modules.
+        """
 
         names = self.layers.keys()
         counters = dict(zip(names, [0]*len(names)))
@@ -50,6 +61,10 @@ class CFGParser(object):
 
 
     def _get_layer(self, config, in_shape, name):
+        """
+        Get the defined torchparse.layers object depending
+        on the name of the desired layer.
+        """
 
         layer = self.layers[name](config, in_shape)
         if hasattr(layer, 'name'):
@@ -57,6 +72,11 @@ class CFGParser(object):
         return layer
 
     def _flow(self, in_shape):
+        """
+        Given a input shape in_shape, *sequantially* go through
+        the cfg file keeping track of the intermediate shapes and
+        storing each layer in the appropiate submodule.
+        """
 
         ret = OrderedDict()
         for l in self.config.sections():
@@ -78,6 +98,10 @@ class CFGParser(object):
 
 
     def get_modules(self, in_shape):
+        """
+        Wrapper for _flow, prunes the submodules in case they are
+        nn.Sequential of size 1.
+        """
 
         model = self._flow(in_shape)
         ret = OrderedDict()
@@ -91,17 +115,11 @@ class CFGParser(object):
         
 
 def parse_cfg(fname, shape):
+    """
+    Get the defined model given an input shape.
+    Arguments:
+        fname (str): either path to .cfg file or raw cfg string.
+        shape (list, tuple, torch.tensor): shape (without batch)
+            of the input data to the model.
+    """
     return CFGParser(fname).get_modules(torch.tensor(shape))
-
-if __name__ == '__main__':
-
-    pass
-
-
-
-
-
-
-
-
-    
