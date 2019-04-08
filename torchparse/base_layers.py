@@ -29,7 +29,6 @@ class ConvolveSpatial(Layer):
     def __init__(self, config, in_shape):
 
         super(ConvolveSpatial, self).__init__(config, in_shape)
-        assert self.in_shape.size(0) == 3, "in_shape must be of dim 3"
         self.config['stride'] = self.config.get('stride', 1)
         self.config['padding'] = padding_type(self.in_shape[1:], 
                                 self.config)
@@ -41,10 +40,11 @@ class ConvolveSpatial(Layer):
         return torch.cat([channel, spatial])
 
     def _spatial_transf(self):
-        return out_conv2d(self.in_shape[1:], self.config)
+        return out_conv(self.in_shape[1:], self.config)
         
     def _channel_transf(self):
         raise NotImplementedError
+
 
 class Dense(Layer):
     """

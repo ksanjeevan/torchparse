@@ -3,7 +3,7 @@ import torch.nn as nn
 from collections import OrderedDict
 import configparser, inspect, io, os
 
-from .utils import add_counters, format_repeats, defined_submodule
+from .utils import add_counters, format_repeats, defined_submodule, safe_conversion
 from . import layers
 
 def get_implem_layers():
@@ -65,19 +65,32 @@ class CFGParser(object):
         Get the defined torchparse.layers object depending
         on the name of the desired layer.
         """
-
         layer = self.layers[name](config, in_shape)
         if hasattr(layer, 'name'):
             layer.name = name
         return layer
 
-    def _flow(self, in_shape):
+
+    def _extract_input(self, in_shape):
+        
+        if self.config.has_section('input'):
+            in_shape = safe_conversion(self.config['input']['shape'])
+            self.config.remove_section('input')
+
+        if in_shape is not None:
+            in_shape = torch.tensor(in_shape)
+
+        return in_shape
+
+
+    def _flow(self, in_shape=None):
         """
         Given a input shape in_shape, *sequantially* go through
         the cfg file keeping track of the intermediate shapes and
         storing each layer in the appropiate submodule.
         """
-
+        in_shape = self._extract_input(in_shape)
+        
         ret = OrderedDict()
         for l in self.config.sections():
             try:
@@ -86,7 +99,7 @@ class CFGParser(object):
                 raise ValueError('Not yet implemented layer: %s'%l)
 
             if num == 'module':
-                ret[name] = OrderedDict()    
+                ret[name] = OrderedDict()
             else:
                 layer = self._get_layer(self.config[l], in_shape, name)
 
@@ -97,12 +110,11 @@ class CFGParser(object):
         return ret
 
 
-    def get_modules(self, in_shape):
+    def get_modules(self, in_shape=None):
         """
         Wrapper for _flow, prunes the submodules in case they are
         nn.Sequential of size 1.
         """
-
         model = self._flow(in_shape)
         ret = OrderedDict()
         for subm_name, subm_od in model.items():
@@ -114,7 +126,7 @@ class CFGParser(object):
         return nn.ModuleDict(ret)
         
 
-def parse_cfg(fname, shape):
+def parse_cfg(fname, in_shape=None):
     """
     Get the defined model given an input shape.
     Arguments:
@@ -122,4 +134,4 @@ def parse_cfg(fname, shape):
         shape (list, tuple, torch.tensor): shape (without batch)
             of the input data to the model.
     """
-    return CFGParser(fname).get_modules(torch.tensor(shape))
+    return CFGParser(fname).get_modules(in_shape)

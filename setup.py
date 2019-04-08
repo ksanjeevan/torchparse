@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="torchparse",
-    version='0.1dev',
+    version='0.1',
     author='Kiran Sanjeevan',
     url='http://github.com/ksanjeevan/torchparse',
     author_email="ksanjeevancabeza@gmail.com",

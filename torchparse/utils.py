@@ -14,7 +14,7 @@ def padding_type(spatial, config):
     ret = None
     if 'padding' not in config:
         return 0
-    elif isinstance(config['padding'], (tuple, list)):
+    elif isinstance(config['padding'], list):
         ret = torch.tensor(config['padding'])
     elif config['padding'] == 'same':
 
@@ -27,18 +27,20 @@ def padding_type(spatial, config):
         ret = torch.zeros(spatial.shape).long()
     else:
         raise ValueError('Pad type is invalid')
-    return tuple(ret.numpy())
+    return list(ret.numpy())
 
 def safe_conversion(value):
     """
     Safely convert parameter value from .cfg file
     """
     try:
-        return ast.literal_eval(value)
+        value = ast.literal_eval(value)
+        value = list(value) if isinstance(value, tuple) else value
+        return value
     except ValueError:
         return value
     
-def out_conv2d(spatial, config):
+def out_conv(spatial, config):
     """
     Calculate spatial output shape after convolution. 
     Arguments:
@@ -50,6 +52,19 @@ def out_conv2d(spatial, config):
     p2 = p if isinstance(p, int) else p[0] + p[1]
 
     return (spatial + p2 - k)//s + 1
+
+def out_tconv(spatial, config):
+    """
+    Calculate spatial output shape after transpose convolution. 
+    Arguments:
+        spatial (tensor): spatial dimensions.
+        config (dict): module parameters.
+    """
+    p, k, s = [config[k] 
+            for k in ['padding', 'kernel_size', 'stride']]
+    p2 = p if isinstance(p, int) else p[0] + p[1]
+    p_out = config.get('output_padding', 0)
+    return (spatial-1)*s - p2 + k + p_out
 
 
 def format_repeats(file):

@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from .base_layers import *
+from .utils import out_tconv
 
 
 class Unperturbed(Layer):
@@ -153,33 +154,106 @@ class Recurrent(Dense):
         return Recurrent.layer[self.name](**self.config)
 
 
-class Conv2d(ConvolveSpatial):
+class Conv(ConvolveSpatial):
     """
     Handle shape transformation and correct 
     class instantiation for nn.Conv2d
     (should this be general for conv1d,3d?)
     """
-    def __init__(self, config, in_shape):
-        super(Conv2d, self).__init__(config, in_shape)
+
+    layer = {
+        'conv1d':nn.Conv1d,
+        'conv2d':nn.Conv2d
+    }
+
+    def __init__(self, config, in_shape, name=''):
+        super(Conv, self).__init__(config, in_shape)
         self.config['in_channels'] = self.in_shape[0].item()
+        self.name = name
     
     def _channel_transf(self):
         return torch.tensor([self.config['out_channels']])
 
     def get_module(self):
-        return nn.Conv2d(**self.config)
+        return Conv.layer[self.name](**self.config)
 
-class MaxPool2d(ConvolveSpatial):
+
+
+class TransposeConv(Conv):
     """
     Handle shape transformation and correct 
-    class instantiation for nn.MaxPool2d
-    (should this be general for adaptive, avgpool, 1d,3d?)
+    class instantiation for nn.Conv2d
+    (should this be general for conv1d,3d?)
     """
-    def __init__(self, config, in_shape):
-        super(MaxPool2d, self).__init__(config, in_shape)
+
+    layer = {
+        'convtranspose1d':nn.ConvTranspose1d,
+        'convtranspose2d':nn.ConvTranspose2d
+    }
+
+    def __init__(self, config, in_shape, name=''):
+        super(TransposeConv, self).__init__(config, in_shape)
+        
+    def _spatial_transf(self):
+        return out_tconv(self.in_shape[1:], self.config)
+
+    def get_module(self):
+        return TransposeConv.layer[self.name](**self.config)
+
+
+
+class Pooling(ConvolveSpatial):
+    """
+    Handle shape transformation and correct 
+    class instantiation for Pooling layers.
+    """
+    layer = {
+        'maxpool1d': nn.MaxPool1d,
+        'maxpool2d': nn.MaxPool2d,
+        'avgpool1d': nn.AvgPool1d,
+        'avgpool2d': nn.AvgPool2d
+    }
+
+
+    def __init__(self, config, in_shape, name=''):
+        super(Pooling, self).__init__(config, in_shape)
+        self.name = name
     
     def _channel_transf(self):
         return self.in_shape[:1]
 
     def get_module(self):
-        return nn.MaxPool2d(**self.config)
+        return Pooling.layer[self.name](**self.config)
+
+
+
+class AdaptivePooling(Layer):
+    """
+    Handle shape transformation and correct 
+    class instantiation for Adaptive Pooling layers.
+    """
+    layer = {
+        'adaptivemaxpool1d': nn.AdaptiveMaxPool1d,
+        'adaptivemaxpool2d': nn.AdaptiveMaxPool2d,
+        'adaptiveavgpool1d': nn.AdaptiveAvgPool1d,
+        'adaptiveavgpool2d': nn.AdaptiveAvgPool2d
+    }
+
+    def __init__(self, config, in_shape, name=''):
+        super(AdaptivePooling, self).__init__(config, in_shape)
+        self.name = name
+
+    def get_out_shape(self):
+        convert = lambda x: [x] if isinstance(x, int) else x
+        spatial = torch.tensor(convert(self.config['output_size']))
+
+        return torch.cat([self.in_shape[:1], spatial]) 
+
+
+    def get_module(self):
+        return AdaptivePooling.layer[self.name](**self.config)
+
+
+
+
+

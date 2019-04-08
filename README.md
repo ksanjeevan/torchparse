@@ -4,10 +4,10 @@ Simple (and for now, sequential) PyTorch model parser. Allowes to define a model
 
 **Features**
 
-- Don't have to worry about I/O dimensions
+- Don't have to worry about layer I/O dimensions
 - Easily define dimension reshapes between layers
 - Repeat block syntax for less typing
-- Get a neat `mm.ModuleDict` back with the desired `nn.Sequentials`
+- Get a neat `nn.ModuleDict` back with the desired `nn.Sequentials`
 
 ## Contents
 - [Installation](#installation)
@@ -43,6 +43,8 @@ ModuleDict(
 Define model in a `.cfg` file (or string), e.g.:
 
 ```bash
+[input]
+	shape=(3,200,300)
 [convs_module]
     REPEATx3
         [conv2d]
@@ -58,7 +60,7 @@ Define model in a `.cfg` file (or string), e.g.:
     END
 
 [moddims]
-    collapse=[0,1,2]
+    collapse=(0,1,2)
 
 [dense_module]
     [linear]
@@ -67,7 +69,7 @@ Define model in a `.cfg` file (or string), e.g.:
     [linear]
         out_features = 10
 ```
-Then, calling **`parse_cfg('example.cfg', shape=[3,200,300])`** returns:
+Then, calling **`parse_cfg('example.cfg')`** returns:
 
 ```python
 ModuleDict(
@@ -93,6 +95,25 @@ ModuleDict(
 )
 
 ```
+and can be used in a custom module like:
+
+```python
+import torch.nn as nn
+from torchparse import parse_cfg
+
+class MyNet(nn.Module):
+
+	def __init__(self, cfg_name):
+		super(MyNet, self).__init__()
+		self.model = parse_cfg(cfg_name)
+		
+	def forward(self, x):
+		x = self.model['convs'](x)
+		x = x.view(x.size(0), -1)
+		x = self.model['dense'](x)
+		return x
+```
+
 
 
 ### Supported modules
@@ -101,16 +122,15 @@ Implemented layers (`nn.Module`):
 
 - [x] `Linear`
 - [x] `LSTM`, `GRU`, `RNN`
-- [ ] `Conv1d`
-- [ ] `MaxPool1d`
-- [x] `MaxPool2d`
-- [x] `Conv2d`
-- [x] `BatchNorm1d`, `BatchNorm2d`
-- [ ] `AvgPool2d`, `AvgPool1d`
+- [x] `(Avg,Max)Pool(1,2)d`
+- [x] `Conv(1,2)d`
+- [x] `BatchNorm(1,2)d`
 - [x] `ReLU`, `ELU`, `LeakyReLU`, `Sigmoid`
 - [x] `Dropout`
-- [ ] `AdaptiveMaxPool2d`, `AdaptiveMaxPool1d`
-- [ ] `ConvTranspose2d`, `ConvTranspose1d`
+- [x] `Adaptive(Max,Avg)Pool(1,2)d`
+- [x] `ConvTranspose(1,2)d`
+- [ ] `Upsample`
+- [ ] `Unpooling`
 
 
 
@@ -140,6 +160,8 @@ then in `.cfg` add:
 	permute=[2,0,1]
 ...
 ```
+Since `torchparse` doesn't consider batch dimension (should it? maybe... but not for now).
+
 This can also be used when dropping a dimension. e.g. in a many-to-one RNN might do something like:
 ```
 ...
@@ -156,7 +178,7 @@ then in `.cfg` add:
 	permute=[1]
 ...
 ```
-(since `torchparse` doesn't consider batch. Doesn't care if we choose the last input of the RNN, only that the time dimension is not there anymore, only `(batch, feature)`, i.e. keep dimension `1`).
+(Doesn't care if we choose the last input of the RNN, only that the time dimension is not there anymore, i.e. keep dimension `1`).
 
 ---
 ##### collapse
@@ -217,4 +239,4 @@ END
 - [x] Non _module cfg handling
 - [x] Block repetitions
 - [ ] Skip connections
-- [ ] Allow .cfg to include input shape
+- [x] Allow .cfg to include input shape
