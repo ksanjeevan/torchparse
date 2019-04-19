@@ -8,7 +8,7 @@ Simple (and for now, sequential) PyTorch model parser. Allowes to define a model
 <img src="plots/steps.png" width="800px"/>
 </p>
 
-More detailed example in [demo.ipynb](https://github.com/ksanjeevan/torchparse/blob/master/demo.ipynb).
+A more detailed example with a custom module in [demo.ipynb](https://github.com/ksanjeevan/torchparse/blob/master/demo.ipynb).
 
 **Features**
 
@@ -21,7 +21,7 @@ More detailed example in [demo.ipynb](https://github.com/ksanjeevan/torchparse/b
 - [Installation](#installation)
 - [Supported modules](#supported-modules)
 - [Detailed Usage](#detailed-usage)
-
+- [Improvements](#improvements)
 ### Installation
 
 **HTTPS**
@@ -161,7 +161,7 @@ END
 ```
 
 
-### TODO
+### Improvements
 
 - [x] Non _module cfg handling
 - [x] Block repetitions
