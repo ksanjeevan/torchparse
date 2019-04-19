@@ -36,7 +36,7 @@ class CFGParser(object):
                                                 allow_no_value=True)
 
         self.config.read_string(self._preparse(cfg_fname))
-    
+        self._in_shape = None
 
     def _preparse(self, cfg_fname):
         """
@@ -78,7 +78,7 @@ class CFGParser(object):
             self.config.remove_section('input')
 
         if in_shape is not None:
-            in_shape = torch.tensor(in_shape)
+            in_shape = torch.as_tensor(in_shape)
 
         return in_shape
 
@@ -91,6 +91,8 @@ class CFGParser(object):
         """
         in_shape = self._extract_input(in_shape)
         
+        self._in_shape = in_shape
+
         ret = OrderedDict()
         for l in self.config.sections():
             try:

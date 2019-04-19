@@ -55,10 +55,10 @@ class Dense(Layer):
 
         super(Dense, self).__init__(config, in_shape)
         self.changed_feat = None
-
+        self.out_mod = 1.
 
     def get_out_shape(self):
         out_shape = self.in_shape.clone()
-        out_shape[-1] = self.config[self.changed_feat]
+        out_shape[-1] = self.out_mod*self.config[self.changed_feat]
 
         return out_shape

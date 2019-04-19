@@ -2,6 +2,14 @@
 
 Simple (and for now, sequential) PyTorch model parser. Allowes to define a model in a cfg file for easier iteration.
 
+**Flow**
+
+<p align="center">
+<img src="plots/steps.png" width="800px"/>
+</p>
+
+More detailed example in [demo.ipynb](https://github.com/ksanjeevan/torchparse/blob/master/demo.ipynb).
+
 **Features**
 
 - Don't have to worry about layer I/O dimensions
@@ -11,10 +19,8 @@ Simple (and for now, sequential) PyTorch model parser. Allowes to define a model
 
 ## Contents
 - [Installation](#installation)
-- [Simple-Usage](#simple-usage)
 - [Supported modules](#supported-modules)
 - [Detailed Usage](#detailed-usage)
-
 
 ### Installation
 
@@ -29,92 +35,13 @@ pip install git+ssh://git@github.com/ksanjeevan/torchparse.git
 Verify:
 ```python
 >> from torchparse import parse_cfg, get_sample_cfg
->> parse_cfg(get_sample_cfg(), shape=(3,100,100))
+>> parse_cfg(get_sample_cfg(), in_shape=(3,100,100))
 
 ModuleDict(
   (convs): Sequential(
     (conv2d_0): Conv2d(3, 32, kernel_size=(3, 3), stride=(1, 1))
 ...
 ```
-
-
-### Simple Usage
-
-Define model in a `.cfg` file (or string), e.g.:
-
-```bash
-[input]
-	shape=(3,200,300)
-[convs_module]
-    REPEATx3
-        [conv2d]
-            out_channels=32
-            kernel_size=3
-            stride=1
-            padding=valid
-        [batchnorm2d]
-        [elu]
-        [maxpool2d]
-            kernel_size=3
-            stride=3
-    END
-
-[moddims]
-    collapse=(0,1,2)
-
-[dense_module]
-    [linear]
-        out_features = 500
-    [relu]
-    [linear]
-        out_features = 10
-```
-Then, calling **`parse_cfg('example.cfg')`** returns:
-
-```python
-ModuleDict(
-  (convs): Sequential(
-    (conv2d_0): Conv2d(3, 32, kernel_size=(3, 3), stride=(1, 1))
-    (batchnorm2d_0): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-    (elu_0): ELU(alpha=1.0)
-    (maxpool2d_0): MaxPool2d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
-    (conv2d_1): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1))
-    (batchnorm2d_1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-    (elu_1): ELU(alpha=1.0)
-    (maxpool2d_1): MaxPool2d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
-    (conv2d_2): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1))
-    (batchnorm2d_2): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-    (elu_2): ELU(alpha=1.0)
-    (maxpool2d_2): MaxPool2d(kernel_size=3, stride=3, padding=0, dilation=1, ceil_mode=False)
-  )
-  (dense): Sequential(
-    (linear_0): Linear(in_features=1920, out_features=500, bias=True)
-    (relu_0): ReLU()
-    (linear_1): Linear(in_features=500, out_features=10, bias=True)
-  )
-)
-
-```
-and can be used in a custom module like:
-
-```python
-import torch.nn as nn
-from torchparse import parse_cfg
-
-class MyNet(nn.Module):
-
-	def __init__(self, cfg_name):
-		super(MyNet, self).__init__()
-		self.model = parse_cfg(cfg_name)
-		
-	def forward(self, x):
-		x = self.model['convs'](x)
-		x = x.view(x.size(0), -1)
-		x = self.model['dense'](x)
-		return x
-```
-
-
 
 ### Supported modules
 

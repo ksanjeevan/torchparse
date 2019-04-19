@@ -15,7 +15,8 @@ class Unperturbed(Layer):
             'elu' : nn.ELU,
             'leakyrelu':nn.LeakyReLU,
             'sigmoid':nn.Sigmoid,
-            'dropout':nn.Dropout
+            'dropout':nn.Dropout,
+            'dropout2d':nn.Dropout2d
         }
 
     def __init__(self, config, in_shape, name=''):
@@ -147,7 +148,9 @@ class Recurrent(Dense):
         assert self.in_shape.size(0) == 2, "in_shape must be of dim 2"
         self.changed_feat = 'hidden_size'
         self.config['input_size'] = self.in_shape[-1].item()
-
+        
+        bidirectional = self.config.get('bidirectional', False)
+        self.out_mod = 2. if bidirectional else self.out_mod
         self.name = name
 
     def get_module(self):

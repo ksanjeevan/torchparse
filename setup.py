@@ -13,6 +13,6 @@ setup(
         'numpy >= 1.16.2',
         'torch >= 1.0'
       ],
-    keywords="torch deep learning parse cfg",
+    keywords="pytorch deep learning parse cfg",
     zip_safe=False
 )
