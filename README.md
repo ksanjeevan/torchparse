@@ -5,7 +5,7 @@ Simple (and for now, sequential) PyTorch model parser. Allowes to define a model
 **Flow**
 
 <p align="center">
-<img src="plots/steps.png" width="800px"/>
+<img src="plots/flow.png" width="800px"/>
 </p>
 
 A more detailed example with a custom module in [demo.ipynb](https://github.com/ksanjeevan/torchparse/blob/master/demo.ipynb).
